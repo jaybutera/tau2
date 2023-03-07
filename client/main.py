@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import asyncio, json, os, sys, tempfile
 from datetime import datetime
 from tabulate import tabulate
