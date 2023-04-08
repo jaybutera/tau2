@@ -1,5 +1,6 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-22.11";
+  #inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs = { self, nixpkgs }:
     let
@@ -17,11 +18,11 @@
           packages = with pkgs.${system}; [
             (poetry2nix.mkPoetryEnv { projectDir = self; })
             poetry
-            python310
-            python310Packages.tabulate
-            python310Packages.pycryptodome
-            python310Packages.colorama
-            python310Packages.toml
+            python311
+            python311Packages.tabulate
+            python311Packages.pycryptodome
+            python311Packages.colorama
+            python311Packages.toml
           ];
         };
       });
