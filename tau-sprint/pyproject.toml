@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "tau-sprint"
+version = "0.1.0"
+description = "Sprint management layer for tau2"
+authors = []
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+tabulate = "^0.9.0"
+colorama = "^0.4.6"
+
+[tool.poetry.scripts]
+tau-sprint = "main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
