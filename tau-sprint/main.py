@@ -91,9 +91,17 @@ def cmd_complete(sprint_id):
 
 def cmd_add_story(sprint_id, task_ids):
     """Add stories to sprint"""
+    added = 0
     for task_id in task_ids:
-        sprint.add_story_to_sprint(sprint_id, int(task_id))
-    print(f"Added {len(task_ids)} story(ies) to sprint {sprint_id}")
+        tid = int(task_id)
+        snapshot = sprint.add_story_to_sprint(sprint_id, tid)
+        if snapshot:
+            print(f"  Story #{tid}: {snapshot['title']}")
+            added += 1
+        else:
+            print(f"Error: Task #{tid} not found in tau2", file=sys.stderr)
+            return -1
+    print(f"Added {added} story(ies) to sprint {sprint_id}")
     return 0
 
 def cmd_breakdown(sprint_id, parent_task_id, breakdown_args):
@@ -204,15 +212,20 @@ def cmd_board(sprint_id):
     # Display stories in order
     order = s["order"] if s["order"] else s["committed_items"]
     for story_id in order:
+        # Get story snapshot if available
+        snapshot = sprint.get_story_snapshot(sprint_id, story_id)
+        story_title = f"{snapshot['title']}" if snapshot else ""
+        story_info = f" {story_title}" if story_title else ""
+
         if story_id not in stories:
-            print(f"Story #{story_id}: (no subtasks)")
+            print(f"Story #{story_id}:{story_info} (no subtasks)")
             continue
 
         story_tasks = stories[story_id]
         total_est = sum(t["estimated_hours"] for t in story_tasks)
         committed_est = sum(t["estimated_hours"] for t in story_tasks if t["committed_to_sprint"])
 
-        print(f"Story #{story_id}: ({committed_est}h committed / {total_est}h total)")
+        print(f"Story #{story_id}:{story_info} ({committed_est}h committed / {total_est}h total)")
 
         for t in story_tasks:
             status_label = "IN SPRINT" if t["committed_to_sprint"] else "FUTURE"

@@ -49,3 +49,17 @@ def save_burndown(burndown):
     path = SPRINT_DIR / "burndown.json"
     with open(path, "w") as f:
         json.dump(burndown, f, indent=2)
+
+def load_stories():
+    ensure_dir()
+    path = SPRINT_DIR / "stories.json"
+    if path.exists():
+        with open(path) as f:
+            return json.load(f)
+    return []
+
+def save_stories(stories):
+    ensure_dir()
+    path = SPRINT_DIR / "stories.json"
+    with open(path, "w") as f:
+        json.dump(stories, f, indent=2)
