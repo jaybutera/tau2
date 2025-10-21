@@ -4,22 +4,31 @@ Sprint management layer built on top of tau2.
 
 ## Installation
 
+Install dependencies:
+
 ```bash
-cd tau-sprint
+cd ~/src/tau2/tau-sprint
 poetry install
 ```
 
-Or add an alias to your `~/.bashrc`:
+Add an alias to your `~/.bashrc`:
 
 ```bash
-alias tau-sprint="python3 ~/src/tau2/tau-sprint/main.py"
+alias tau-sprint="cd ~/src/tau2/tau-sprint && poetry run python client/main.py"
+```
+
+Start the tau-sprint server:
+
+```bash
+cd ~/src/tau2/tau-sprint
+poetry run python server/main.py
 ```
 
 ## Quick Start
 
 ```bash
-# Create a sprint
-tau-sprint create "Sprint 1" --start 2025-01-13 --end 2025-01-27 --capacity 160
+# Create a sprint (dates in DDMM format)
+tau-sprint create "Sprint 1" --start 1301 --end 2701 --capacity 160
 
 # Add stories from tau2
 tau-sprint 1 add-story 5 8
@@ -27,23 +36,18 @@ tau-sprint 1 add-story 5 8
 # Break down story into subtasks
 tau-sprint 1 story 5 breakdown "Design API" 4h "Implement OAuth" 8h "Write tests" 3h
 
-# View sprint board
-tau-sprint 1 board
+# View sprint board (default view)
+tau-sprint 1
 
 # Start working on a subtask
 tau-sprint 1 task s1-t1 start
 
 # Update progress
-tau-sprint 1 task s1-t1 update --remaining 2 --actual 2
+tau-sprint 1 task s1-t1 update --remaining 2h --actual 2h
 
-# Mark done
+# Mark done (works from any status)
 tau-sprint 1 task s1-t1 done
 
-# Take daily snapshot
-tau-sprint 1 snapshot
-
-# View burndown
+# View burndown chart (snapshots are automatic)
 tau-sprint 1 burndown
 ```
-
-For complete documentation, see tau-sprint.md

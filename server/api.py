@@ -1,6 +1,7 @@
 import json, sys
 
-import lib, pipe, plumbing, util
+import tau_core.util
+import pipe, plumbing, util
 
 PROTOCOL_VERSION = 1
 
@@ -99,14 +100,14 @@ async def modify_task(who, id, changes):
                 return Error(111, "invalid attribute")
             task[attr] = val
         elif cmd == "append":
-            templ = lib.util.task_template
+            templ = tau_core.util.task_template
             if not templ[attr] == list:
                 return Error(110, "invalid templ")
             if val in task[attr]:
                 return Error(225, "adding duplicate item to list")
             task[attr].append(val)
         elif cmd == "remove":
-            templ = lib.util.task_template
+            templ = tau_core.util.task_template
             if not templ[attr] == list:
                 return Error(110, "invalid templ")
             try:
@@ -118,7 +119,7 @@ async def modify_task(who, id, changes):
                   file=sys.stderr)
             return Error(110, f"unhandled command ({cmd}, {attr}, {val})")
 
-        task["events"].append([cmd, lib.util.now(), who, attr, val])
+        task["events"].append([cmd, tau_core.util.now(), who, attr, val])
 
     print("Modified task:")
     print(json.dumps(task, indent=2))
@@ -155,7 +156,7 @@ async def change_task_status(who, id, status):
     task["status"] = status
 
     # Append to the event log
-    task["events"].append(["status", lib.util.now(), who, status])
+    task["events"].append(["status", tau_core.util.now(), who, status])
 
     plumbing.save_task(task)
 
@@ -181,7 +182,7 @@ async def add_task_comment(who, id, comment):
 
     task = plumbing.load_task(blob_idx)
 
-    task["events"].append(["comment", lib.util.now(), who, comment])
+    task["events"].append(["comment", tau_core.util.now(), who, comment])
 
     plumbing.save_task(task)
 

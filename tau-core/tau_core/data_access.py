@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Read tau2 data files directly"""
+"""Data access layer for tau2 tasks"""
 import json
 from pathlib import Path
+from .storage import TAU_DATA_DIR
 
-TAU_DATA_DIR = Path.home() / ".config" / "tau" / "data"
 
 def load_active():
     """Load active tasks index from tau2"""
@@ -12,6 +12,7 @@ def load_active():
         return []
     with open(active_file) as f:
         return json.load(f)
+
 
 def load_task_blob(blob_idx):
     """Load a task blob from tau2"""
@@ -23,6 +24,7 @@ def load_task_blob(blob_idx):
         return None
     with open(blob_file) as f:
         return json.load(f)
+
 
 def get_task_by_id(task_id):
     """Get a tau2 task by its ID"""
@@ -36,6 +38,7 @@ def get_task_by_id(task_id):
         return load_task_blob(blob_idx)
     except Exception:
         return None
+
 
 def capture_task_snapshot(task_id):
     """Capture a snapshot of tau2 task data for historical record"""

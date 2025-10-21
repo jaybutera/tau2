@@ -1,6 +1,12 @@
-import os, sys, toml
+#!/usr/bin/env python3
+"""Configuration loading for tau tools"""
+import os
+import sys
+import toml
+
 
 def load_config():
+    """Load tau configuration from TOML file"""
     try:
         cfg_filename = os.environ["TAU_CONFIG"]
     except KeyError:
@@ -19,11 +25,12 @@ def load_config():
 
     return cfg
 
+
 def get(attr, default_value):
+    """Get configuration attribute with default value"""
     if (cfg := load_config()) is None:
         return default_value
     try:
         return cfg[attr]
     except KeyError:
         return default_value
-

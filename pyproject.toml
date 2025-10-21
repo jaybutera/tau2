@@ -4,14 +4,15 @@ version = "0.1.0"
 description = "task management"
 authors = []
 readme = "README.md"
-packages = [{include = "client"}]
+packages = [{include = "client"}, {include = "server"}, {include = "lib"}]
 
 [tool.poetry.dependencies]
-python = "3.11"
+python = "^3.10"
 colorama = "^0.4.6"
 pycryptodome = "^3.17"
 tabulate = "^0.9.0"
 toml = "^0.10.2"
+tau-core = {path = "./tau-core", develop = true}
 
 [tool.poetry.dev-dependencies]
 

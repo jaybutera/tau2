@@ -1,22 +1,29 @@
-import json, os, sys
+#!/usr/bin/env python3
+"""Encrypted network communication channel for tau RPC"""
+import json
+import sys
 from Crypto.Cipher import AES
 
-import tau_core.config
+from . import config
 
-# should be 32 bytes hex
-# https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html
-KEY = bytes.fromhex(tau_core.config.get(
-    "shared_secret",
-    "87b9b70e722d20c046c8dba8d0add1f16307fec33debffec9d001fd20dbca3ee"
-))
+
+def get_encryption_key():
+    """Get encryption key from config"""
+    # should be 32 bytes hex
+    # https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html
+    default_key = "87b9b70e722d20c046c8dba8d0add1f16307fec33debffec9d001fd20dbca3ee"
+    return bytes.fromhex(config.get("shared_secret", default_key))
+
 
 class Channel:
+    """Encrypted bidirectional communication channel"""
 
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
 
     async def readline(self):
+        """Read a line from the channel"""
         if not (line := await self.reader.readline()):
             self.writer.close()
             return None
@@ -24,6 +31,7 @@ class Channel:
         return line[:-1].decode()
 
     async def receive(self):
+        """Receive and decrypt a message"""
         if (nonce := await self.readline()) is None:
             return None
         if (ciphertext := await self.readline()) is None:
@@ -35,13 +43,8 @@ class Channel:
         ciphertext = bytes.fromhex(ciphertext)
         tag = bytes.fromhex(tag)
 
-        #print(f"{nonce.hex()}")
-        #print(f"{ciphertext.hex()}")
-        #print(f"{tag.hex()}")
-        #print()
-
         # Decrypt
-        cipher = AES.new(KEY, AES.MODE_EAX, nonce=nonce)
+        cipher = AES.new(get_encryption_key(), AES.MODE_EAX, nonce=nonce)
         plaintext = cipher.decrypt(ciphertext)
         try:
             cipher.verify(tag)
@@ -54,18 +57,14 @@ class Channel:
         return response
 
     async def send(self, obj):
+        """Encrypt and send a message"""
         message = json.dumps(obj)
         data = message.encode()
 
         # Encrypt
-        cipher = AES.new(KEY, AES.MODE_EAX)
+        cipher = AES.new(get_encryption_key(), AES.MODE_EAX)
         nonce = cipher.nonce
         ciphertext, tag = cipher.encrypt_and_digest(data)
-
-        #print(f"{nonce.hex()}")
-        #print(f"{ciphertext.hex()}")
-        #print(f"{tag.hex()}")
-        #print()
 
         # Encode as hex strings since the bytes might contain new lines
         nonce = nonce.hex().encode()
@@ -76,38 +75,3 @@ class Channel:
         self.writer.write(ciphertext + b"\n")
         self.writer.write(tag + b"\n")
         await self.writer.drain()
-
-async def _test_client():
-    await asyncio.sleep(1)
-    reader, writer = await asyncio.open_connection("127.0.0.1", 7643)
-    channel = Channel(reader, writer)
-    request = {
-        "foo": "bar"
-    }
-    await channel.send(request)
-    response = await channel.receive()
-    print(f"Client: {response}")
-
-async def _test_server(reader, writer):
-    channel = Channel(reader, writer)
-    request = await channel.receive()
-    print(f"Server: {request}")
-    response = {
-        "abc": "xyz"
-    }
-    await channel.send(response)
-
-async def _test_channel():
-    server = await asyncio.start_server(_test_server, "127.0.0.1", 7643)
-    task1 = asyncio.create_task(_test_client())
-    async with server:
-        task2 = asyncio.create_task(server.serve_forever())
-        await asyncio.sleep(3)
-    await task1
-    task2.cancel()
-
-if __name__ == "__main__":
-    import asyncio
-    # run send and recv testes
-    asyncio.run(_test_channel())
-

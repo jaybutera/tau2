@@ -4,13 +4,15 @@ from datetime import datetime
 from tabulate import tabulate
 from colorama import Fore, Back, Style
 
-import api, lib
+import api
+import tau_core.config
+import tau_core.util
 
-USERNAME = lib.config.get("username", "Anonymous")
+USERNAME = tau_core.config.get("username", "Anonymous")
 
 async def add_task(task_args):
     task = {
-        "blob_idx": lib.util.random_blob_idx(),
+        "blob_idx": tau_core.util.random_blob_idx(),
         "assigned": [],
         "title": None,
         "desc": None,
@@ -20,7 +22,7 @@ async def add_task(task_args):
         "status": "open",
         "rank": None,
         "due": None,
-        "created": lib.util.now(),
+        "created": tau_core.util.now(),
         "events": [],
     }
     # Everything that isn't an attribute is part of the title
@@ -100,7 +102,7 @@ def prompt_comment_text():
     ])
 
 def set_task_attr(task, attr, val):
-    templ = lib.util.task_template
+    templ = tau_core.util.task_template
     assert attr != "blob_idx"
     assert attr in ["desc", "rank", "due", "project"]
     assert templ[attr] != list
@@ -111,10 +113,10 @@ def set_task_attr(task, attr, val):
         val = convert_attr_val(attr, val)
         task[attr] = val
 
-    lib.util._enforce_task_format(task)
+    tau_core.util.enforce_task_format(task)
 
 def convert_attr_val(attr, val):
-    templ = lib.util.task_template
+    templ = tau_core.util.task_template
 
     if attr in ["desc", "project", "title"]:
         assert templ[attr] == str
@@ -136,7 +138,7 @@ def convert_attr_val(attr, val):
         except ValueError:
             print(f"error: unknown date format {val}")
             sys.exit(-1)
-        due = lib.util.datetime_to_unix(dt)
+        due = tau_core.util.datetime_to_unix(dt)
         return due
     else:
         print(f"error: unhandled attr '{attr}' = {val}")
@@ -167,7 +169,7 @@ def list_tasks(tasks, filters):
         if task["due"] is None:
             due = ""
         else:
-            dt = lib.util.unix_to_datetime(task["due"])
+            dt = tau_core.util.unix_to_datetime(task["due"])
             due = dt.strftime("%H:%M %d/%m/%y")
 
         rank = task["rank"] if task["rank"] is not None else ""
@@ -234,11 +236,11 @@ def tabulate_task(task):
     if task["due"] is None:
         due = ""
     else:
-        dt = lib.util.unix_to_datetime(task["due"])
+        dt = tau_core.util.unix_to_datetime(task["due"])
         due = dt.strftime("%H:%M %d/%m/%y")
 
     assert task["created"] is not None
-    dt = lib.util.unix_to_datetime(task["created"])
+    dt = tau_core.util.unix_to_datetime(task["created"])
     created = dt.strftime("%H:%M %d/%m/%y")
 
     table = [
@@ -261,12 +263,12 @@ def task_table(task):
     table = []
     for event in task["events"]:
         cmd, when, args = event[0], event[1], event[2:]
-        when = lib.util.unix_to_datetime(when)
+        when = tau_core.util.unix_to_datetime(when)
         when = when.strftime("%H:%M %d/%m/%y")
         if cmd == "set":
             who, attr, val = args
             if attr == "due" and val is not None:
-                val = lib.util.unix_to_datetime(val)
+                val = tau_core.util.unix_to_datetime(val)
                 val = val.strftime("%H:%M %d/%m/%y")
             table.append([
                 Style.DIM + f"{who} changed {attr} to {val}" + Style.RESET_ALL,
@@ -319,7 +321,7 @@ def task_table(task):
     table = []
     for event in task['events']:
         cmd, when, args = event[0], event[1], event[2:]
-        when = lib.util.unix_to_datetime(when)
+        when = tau_core.util.unix_to_datetime(when)
         when = when.strftime("%H:%M %d/%m/%y")
         if cmd == "comment":
             who, comment = args
@@ -499,7 +501,7 @@ Example:
                 print("error: month must be of format MMYY")
                 return -1
         else:
-            month = lib.util.current_month()
+            month = tau_core.util.current_month()
 
         await show_deactive_tasks(month)
         return 0
@@ -545,7 +547,7 @@ Example:
                 print("Error: month must be of format MMYY")
                 return -1
         else:
-            month = lib.util.current_month()
+            month = tau_core.util.current_month()
 
         if (errc := await show_archive_task(id, month)) < 0:
             return errc
@@ -555,5 +557,6 @@ Example:
 
     return 0
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 
